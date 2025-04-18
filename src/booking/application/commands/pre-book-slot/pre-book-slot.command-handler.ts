@@ -4,9 +4,7 @@ import { TimeSlotRepository } from '../../ports/time-slot.repository';
 import { NotFoundException } from '@nestjs/common';
 
 @CommandHandler(PrebookSlotCommand)
-export class PrebookSlotCommandHandler
-  implements ICommandHandler<PrebookSlotCommand, any>
-{
+export class PrebookSlotCommandHandler implements ICommandHandler<PrebookSlotCommand, any> {
   constructor(
     private readonly timeSlotRepository: TimeSlotRepository, // DatabaseService
   ) {}
@@ -15,11 +13,9 @@ export class PrebookSlotCommandHandler
     const slot = await this.timeSlotRepository.findOne({
       where: {
         doctorId: command.doctorId,
-        // status: 'FREE',
         time: new Date(command.time),
       },
     });
-    console.log("🚀 ~ execute ~ slot:", slot)
 
     if (!slot) {
       throw new NotFoundException();

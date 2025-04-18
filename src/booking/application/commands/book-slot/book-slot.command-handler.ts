@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BookSlotCommand } from './book-slot.command';
 import { TimeSlotRepository } from '../../ports/time-slot.repository';
 import { BookingStatusEnum } from 'src/booking/domain/enums/booking-status.enum';
+import { NotFoundException } from '@nestjs/common';
 
 @CommandHandler(BookSlotCommand)
 export class BookSlotCommandHandler implements ICommandHandler<BookSlotCommand, any> {
@@ -14,12 +15,11 @@ export class BookSlotCommandHandler implements ICommandHandler<BookSlotCommand, 
       where: {
         doctorId: command.doctorId,
         time: new Date(command.time),
-        OR: [{ status: BookingStatusEnum.FREE }, { status: BookingStatusEnum.PREBOOKED, patientId: command.patientId }],
       },
     });
 
     if (!slot) {
-      return false;
+      throw new NotFoundException();
     }
 
     slot.book({ patientId: command.patientId });
