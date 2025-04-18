@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       target: dev
     ports:
-      - '1337:1337'
+      - ${PORT:-1337}:1337
     volumes:
       - .:/app
       - /app/node_modules
