@@ -7,13 +7,17 @@ services:
       dockerfile: Dockerfile
       target: dev
     ports:
-      - '3000:3000'
+      - '1337:1337'
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
     command: pnpm dev
+    depends_on:
+      - postgres
+      - redis
+
   postgres:
     image: postgres:16-alpine
     volumes:

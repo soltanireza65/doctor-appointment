@@ -26,7 +26,7 @@ import { QueueOptions } from 'bullmq';
       isGlobal: true,
       envFilePath: ['.env'],
       validationSchema: Joi.object({
-        PORT: Joi.number().default(3000),
+        PORT: Joi.number().default(1337),
         DATABASE_URL: Joi.string().required(),
       }),
     }),

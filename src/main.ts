@@ -26,9 +26,9 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  await app.listen(process.env.PORT ?? 3000, () => {
+  await app.listen(process.env.PORT ?? 1337, () => {
     Logger.log(
-      `Application is running on: ${process.env.PORT ?? 3000}`,
+      `Application is running on: ${process.env.PORT ?? 1337}`,
       'Bootstrap',
     );
   });

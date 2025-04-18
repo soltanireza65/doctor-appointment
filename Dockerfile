@@ -13,7 +13,7 @@ FROM base AS dev
 
 ENV NODE_ENV=development
 
-EXPOSE 3000
+EXPOSE 1337
 
 CMD ["pnpm", "dev"]
 
@@ -34,6 +34,6 @@ RUN pnpm install --prod
 
 COPY --from=build /app/dist ./dist
 
-EXPOSE 3000
+EXPOSE 1337
 
 CMD ["node", "dist/main"]

@@ -12,8 +12,8 @@
     "dev": "nest start --watch",
     "debug": "nest start --debug --watch",
     "prod": "node dist/main",
-    "prisma:generate": "pnpm dlx prisma generate",
-    "prisma:deploy": "pnpm dlx prisma migrate deploy",
+    "prisma:generate": "prisma generate",
+    "prisma:deploy": "prisma migrate deploy",
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
