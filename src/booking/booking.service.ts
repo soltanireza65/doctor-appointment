@@ -1,112 +1,111 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TimeSlot } from './time-slot.interface';
-import { BookingStatus } from './booking-status.enum';
+import { DatabaseService } from 'src/database/database.service';
+import { BookingStatus } from '@prisma/client';
 
 @Injectable()
 export class BookingService {
-  private doctorSlots = new Map<string, TimeSlot[]>();
-  private readonly logger: Logger = new Logger(BookingService.name);
+  constructor(private readonly db: DatabaseService) {}
 
-  constructor() {
-    this.doctorSlots.set('1', [
-      {
-        time: '09:00',
-        status: BookingStatus.FREE,
-      },
-      {
-        time: '09:30',
-        status: BookingStatus.FREE,
-      },
-      {
-        time: '10:00',
-        status: BookingStatus.FREE,
-      },
-      {
-        time: '10:30',
-        status: BookingStatus.FREE,
-      },
-    ]);
-  }
+  async initSlots(doctorId: string, timeStrings: string[]) {
+    const doctor = await this.db.doctor.upsert({
+      where: { id: doctorId },
+      create: { id: doctorId, name: `Doctor ${doctorId}` },
+      update: {},
+    });
 
-  initSlots(doctorId: string, slots: string[]) {
-    this.doctorSlots.set(
-      doctorId,
-      slots.map((time) => ({
+    const existing = await this.db.timeSlot.findMany({
+      where: {
+        doctorId,
+        time: { in: timeStrings.map((t) => new Date(t)) },
+      },
+    });
+
+    const existingTimes = new Set(existing.map((s) => s.time.toISOString()));
+
+    const newSlots = timeStrings
+      .map((t) => new Date(t))
+      .filter((time) => !existingTimes.has(time.toISOString()))
+      .map((time) => ({
         time,
-        status: BookingStatus.FREE,
-      })),
-    );
+        doctorId,
+        status: 'FREE' as const,
+      }));
 
-    this.logger.log('init', this.doctorSlots);
+    await this.db.timeSlot.createMany({
+      data: newSlots,
+    });
+
+    return { added: newSlots.length };
   }
 
-  listFreeSlots(doctorId: string): TimeSlot[] {
-    console.log(
-      '🚀 ~ BookingService ~ listFreeSlots ~ this.doctorSlots:',
-      this.doctorSlots,
-    );
-    console.log(
-      '🚀 ~ BookingService ~ listFreeSlots ~ this.doctorSlots:',
-      this.doctorSlots.get(doctorId),
-    );
-    // this.cleanupExpiredPreBookings(doctorId);
-    return (
-      this.doctorSlots
-        .get(doctorId)
-        ?.filter((slot) => slot.status === BookingStatus.FREE) ?? []
-    );
+  async listFreeSlots(doctorId: string) {
+    return this.db.timeSlot.findMany({
+      where: {
+        doctorId,
+        status: 'FREE',
+      },
+      orderBy: { time: 'asc' },
+    });
   }
 
-  preBook(doctorId: string, time: string, patientId: string): boolean {
-    const slots = this.doctorSlots.get(doctorId);
-    const slot = slots?.find((s) => s.time === time);
-
-    if (!slot || slot.status !== BookingStatus.FREE) return false;
-
-    slot.status = BookingStatus.PREBOOKED;
-    slot.patientId = patientId;
-    slot.expiresAt = Date.now() + 5 * 60 * 1000; // expires in 5 mins
-    return true;
-  }
-
-  book(doctorId: string, time: string, patientId: string): boolean {
-    const slots = this.doctorSlots.get(doctorId);
-    const slot = slots?.find((s) => s.time === time);
+  async preBook(doctorId: string, time: string, patientId: string) {
+    const slot = await this.db.timeSlot.findFirst({
+      where: { doctorId, time: new Date(time), status: 'FREE' },
+    });
 
     if (!slot) return false;
 
-    // Check if already booked
-    if (slot.status === BookingStatus.BOOKED) return false;
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Check if pre-booked by this patient or still free
-    if (
-      slot.status === BookingStatus.FREE ||
-      (slot.status === BookingStatus.PREBOOKED && slot.patientId === patientId)
-    ) {
-      slot.status = BookingStatus.BOOKED;
-      slot.patientId = patientId;
-      delete slot.expiresAt;
-      return true;
-    }
+    await this.db.timeSlot.update({
+      where: { id: slot.id },
+      data: {
+        status: 'PREBOOKED',
+        patientId,
+        expiresAt,
+      },
+    });
 
-    return false;
+    return true;
   }
 
-  private cleanupExpiredPreBookings(doctorId: string) {
-    const slots = this.doctorSlots.get(doctorId);
-    if (!slots) return;
+  async book(doctorId: string, time: string, patientId: string) {
+    const slot = await this.db.timeSlot.findFirst({
+      where: {
+        doctorId,
+        time: new Date(time),
+        OR: [{ status: 'FREE' }, { status: 'PREBOOKED', patientId }],
+      },
+    });
 
-    const now = Date.now();
-    for (const slot of slots) {
-      if (
-        slot.status === BookingStatus.PREBOOKED &&
-        slot.expiresAt &&
-        now > slot.expiresAt
-      ) {
-        slot.status = BookingStatus.FREE;
-        delete slot.patientId;
-        delete slot.expiresAt;
-      }
+    if (!slot) return false;
+
+    await this.db.timeSlot.update({
+      where: { id: slot.id },
+      data: {
+        status: 'BOOKED',
+        expiresAt: null,
+      },
+    });
+
+    return true;
+  }
+
+  async expirePrebook(slotId: string) {
+    const slot = await this.db.timeSlot.findUnique({ where: { id: slotId } });
+    if (
+      slot?.status === 'PREBOOKED' &&
+      slot.expiresAt &&
+      slot.expiresAt < new Date()
+    ) {
+      await this.db.timeSlot.update({
+        where: { id: slotId },
+        data: {
+          status: 'FREE',
+          patientId: null,
+          expiresAt: null,
+        },
+      });
     }
   }
 }
