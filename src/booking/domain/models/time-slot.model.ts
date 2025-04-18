@@ -40,6 +40,10 @@ export class TimeSlotModel {
     return this.status === BookingStatusEnum.PREBOOKED;
   }
 
+  setAvailable(){
+    
+  }
+
   preBook(args: { patientId: string }): void {
     if (this.isBooked || this.isPreBooked) {
       throw new UnprocessableEntityException('Slot is not available');

@@ -1,11 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BookSlotCommand } from './book-slot.command';
 import { TimeSlotRepository } from '../../ports/time-slot.repository';
+import { BookingStatusEnum } from 'src/booking/domain/enums/booking-status.enum';
 
 @CommandHandler(BookSlotCommand)
-export class BookSlotCommandHandler
-  implements ICommandHandler<BookSlotCommand, any>
-{
+export class BookSlotCommandHandler implements ICommandHandler<BookSlotCommand, any> {
   constructor(
     private readonly timeSlotRepository: TimeSlotRepository, // DatabaseService
   ) {}
@@ -15,10 +14,7 @@ export class BookSlotCommandHandler
       where: {
         doctorId: command.doctorId,
         time: new Date(command.time),
-        OR: [
-          { status: 'FREE' },
-          { status: 'PREBOOKED', patientId: command.patientId },
-        ],
+        OR: [{ status: BookingStatusEnum.FREE }, { status: BookingStatusEnum.PREBOOKED, patientId: command.patientId }],
       },
     });
 

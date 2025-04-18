@@ -1,0 +1,2 @@
+export const BOOKING_QUEUE = 'BOOKING_QUEUE';
+export const EXPIRE_TIME_SLOT_JOB = 'EXPIRE_TIME_SLOT_JOB';

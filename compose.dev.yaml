@@ -13,4 +13,25 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-    command: pnpm start:dev
+    command: pnpm dev
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+
+  redis:
+    image: redis:7-alpine
+    env_file:
+      - .env
+    ports:
+      - ${REDIS_PORT-6379}:6379
+
+volumes:
+  pg_data:

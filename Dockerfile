@@ -15,7 +15,7 @@ ENV NODE_ENV=development
 
 EXPOSE 3000
 
-CMD ["pnpm", "start:dev"]
+CMD ["pnpm", "dev"]
 
 FROM base AS build
 
