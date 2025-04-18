@@ -12,9 +12,8 @@ export const setupSwagger = ({
     .setTitle('Doctor Booking API')
     .setDescription('API for booking doctors')
     .setVersion('1.0')
-    .addTag('doctor')
-    .addTag('booking')
     .build();
+
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup(swaggerPath, app, document);
 };

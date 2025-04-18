@@ -1,12 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { setupSwagger } from './shared/utils/swagger.utils';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api');
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -20,8 +25,13 @@ async function bootstrap() {
 
   setupSwagger({ app, swaggerPath: 'docs' });
 
+  app.enableShutdownHooks();
+
   await app.listen(process.env.PORT ?? 3000, () => {
-    console.log(`Application is running on: ${process.env.PORT ?? 3000}`);
+    Logger.log(
+      `Application is running on: ${process.env.PORT ?? 3000}`,
+      'Bootstrap',
+    );
   });
 }
 
