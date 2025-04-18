@@ -4,7 +4,9 @@ import { InitSlotsRequestDto } from './dto/request/init-slots.request-dto';
 import { ListSlotsRequestDto } from './dto/request/list-slots.request-dto';
 import { PrebookSlotRequestDto } from './dto/request/prebook-slot.request-dto';
 import { BookSlotRequestDto } from './dto/request/book-slot.request-dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('booking')
 @Controller('booking')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
