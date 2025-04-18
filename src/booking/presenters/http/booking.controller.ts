@@ -9,37 +9,49 @@ import {
   BookSlotRequestDto,
   BookSlotRequestParamsDto,
 } from './dto/request/book-slot.request-dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ListTimeSlotResponseDto } from './dto/response/list-time-slot.response-dto';
+import { OkResponse } from 'src/shared/dto/ok.response';
 
 @ApiTags('booking')
 @Controller('booking')
 export class BookingController {
   constructor(private readonly bookingFacade: BookingFacade) {}
 
+  @ApiResponse({
+    type: ListTimeSlotResponseDto,
+    status: 200,
+  })
   @Get(':doctorId/slots')
-  listFreeSlots(@Param() dto: ListFreeSlotsRequestDto) {
-    return this.bookingFacade.listFreeSlots(dto.toQuery());
+  async listFreeSlots(@Param() dto: ListFreeSlotsRequestDto) {
+    const result = await this.bookingFacade.listFreeSlots(dto.toQuery());
+
+    return ListTimeSlotResponseDto.from(result);
   }
 
+  @ApiResponse({
+    type: OkResponse,
+    status: 201,
+  })
   @Post(':doctorId/prebook')
   async preBook(
     @Param() params: PrebookSlotRequestParamsDto,
     @Body() body: PrebookSlotRequestDto,
   ) {
-    const success = await this.bookingFacade.preBook(
-      body.toCommand(params.doctorId),
-    );
-    return { success };
+    await this.bookingFacade.preBook(body.toCommand(params.doctorId));
+    return new OkResponse();
   }
 
+  @ApiResponse({
+    type: OkResponse,
+    status: 201,
+  })
   @Post(':doctorId/book')
   async book(
     @Param() params: BookSlotRequestParamsDto,
     @Body() body: BookSlotRequestDto,
   ) {
-    const success = await this.bookingFacade.book(
-      body.toCommand(params.doctorId),
-    );
-    return { success };
+    await this.bookingFacade.book(body.toCommand(params.doctorId));
+    return new OkResponse();
   }
 }

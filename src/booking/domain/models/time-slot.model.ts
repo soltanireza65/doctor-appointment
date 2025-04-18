@@ -32,42 +32,30 @@ export class TimeSlotModel {
     this.expiresAt = args.expiresAt ?? null;
   }
 
-  isAvailableFor(patientId: string): boolean {
-    if (this.status === BookingStatusEnum.BOOKED) {
-      return false;
-    }
+  get isBooked() {
+    return this.status === BookingStatusEnum.BOOKED;
+  }
 
-    if (
-      this.status === BookingStatusEnum.PREBOOKED &&
-      this.patientId !== patientId
-    ) {
-      return false;
-    }
-
-    return true;
+  get isPreBooked() {
+    return this.status === BookingStatusEnum.PREBOOKED;
   }
 
   preBook(args: { patientId: string }): void {
-    if (!this.isAvailableFor(args.patientId)) {
+    if (this.isBooked || this.isPreBooked) {
       throw new UnprocessableEntityException('Slot is not available');
     }
+
     this.status = BookingStatusEnum.PREBOOKED;
     this.patientId = args.patientId;
     this.expiresAt = new Date(Date.now() + 5 * 60 * 1000);
   }
 
   book(args: { patientId: string }): void {
-    if (!this.isAvailableFor(args.patientId)) {
-      throw new UnprocessableEntityException('Slot is not available');
-    }
-
     if (
-      this.status === BookingStatusEnum.PREBOOKED &&
-      this.patientId !== args.patientId
+      this.isBooked ||
+      (this.isPreBooked && this.patientId !== args.patientId)
     ) {
-      throw new UnprocessableEntityException(
-        'Slot is prebooked by another patient',
-      );
+      throw new UnprocessableEntityException('Slot is not available');
     }
 
     this.status = BookingStatusEnum.BOOKED;

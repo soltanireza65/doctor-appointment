@@ -9,7 +9,7 @@ import {
   FindOption,
   FindAndPaginateOption,
   Paginated,
-} from 'src/shared/repository.type';
+} from 'src/shared/types/repository.type';
 import { TimeSlotPrismaEntity } from '../entities/time-slot.entity';
 import { TimeSlotMapper } from '../mappers/time-slot.mapper';
 

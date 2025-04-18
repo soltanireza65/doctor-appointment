@@ -1,6 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PrebookSlotCommand } from './pre-book-slot.command';
 import { TimeSlotRepository } from '../../ports/time-slot.repository';
+import { NotFoundException } from '@nestjs/common';
 
 @CommandHandler(PrebookSlotCommand)
 export class PrebookSlotCommandHandler
@@ -14,18 +15,18 @@ export class PrebookSlotCommandHandler
     const slot = await this.timeSlotRepository.findOne({
       where: {
         doctorId: command.doctorId,
-        status: 'FREE',
+        // status: 'FREE',
         time: new Date(command.time),
       },
     });
+    console.log("🚀 ~ execute ~ slot:", slot)
+
     if (!slot) {
-      return false;
+      throw new NotFoundException();
     }
 
     slot.preBook({ patientId: command.patientId });
 
     await this.timeSlotRepository.save(slot);
-
-    return true;
   }
 }

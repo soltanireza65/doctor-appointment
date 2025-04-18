@@ -5,6 +5,8 @@ import { BookSlotCommand } from '../commands/book-slot/book-slot.command';
 import { ExpirePrebookSlotCommand } from '../commands/expire-pre-book-slot/expire-pre-book-slot.command';
 import { PrebookSlotCommand } from '../commands/pre-book-slot/pre-book-slot.command';
 import { ListFreeSlotsQuery } from '../queries/list-free-slots/list-free-slots.query';
+import { TimeSlotModel } from 'src/booking/domain/models/time-slot.model';
+import { Paginated } from 'src/shared/types/repository.type';
 
 @Injectable()
 export class BookingFacade {
@@ -13,7 +15,9 @@ export class BookingFacade {
     private readonly commandBus: CommandBus,
   ) {}
 
-  async listFreeSlots(query: ListFreeSlotsQuery) {
+  async listFreeSlots(
+    query: ListFreeSlotsQuery,
+  ): Promise<Paginated<TimeSlotModel>> {
     return this.queryBus.execute(query);
   }
 

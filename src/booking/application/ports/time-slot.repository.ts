@@ -5,7 +5,7 @@ import {
   Paginated,
   TimeStamps,
   WhereInput,
-} from 'src/shared/repository.type';
+} from 'src/shared/types/repository.type';
 
 type InvoiceWhereInputBase = {
   id?: string;
