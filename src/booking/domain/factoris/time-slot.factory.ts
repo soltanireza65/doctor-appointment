@@ -3,7 +3,7 @@ import { TimeSlotModel, TimeSlotModelArgs } from '../models/time-slot.model';
 
 type TimeSlotReadFactoryArgs = TimeSlotModelArgs;
 
-type TimeSlotWriteFactoryArgs = TimeSlotReadFactoryArgs;
+type TimeSlotWriteFactoryArgs = Omit<TimeSlotReadFactoryArgs, 'id'>;
 
 export class TimeSlotReadFactory {
   static create(args: TimeSlotReadFactoryArgs): TimeSlotModel {
@@ -13,6 +13,12 @@ export class TimeSlotReadFactory {
 
 export class TimeSlotWriteFactory {
   static create(args: TimeSlotWriteFactoryArgs): TimeSlotModel {
-    return new TimeSlotModel(args);
+    const id = crypto.randomUUID();
+
+    return new TimeSlotModel({
+      ...args,
+      id,
+      status: BookingStatusEnum.FREE,
+    });
   }
 }
